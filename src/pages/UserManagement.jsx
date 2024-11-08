@@ -1,47 +1,72 @@
-
-import { useEffect } from "react";
-import { Link } from "react-router-dom"; 
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { useNavigate } from "react-router-dom";
 import Header from "../components/header/header";
+import axios from "axios";
+import {
+  openPreloader,
+  closePreloader,
+} from "../redux/features/preloader-slice";
+
+import { useSelector, useDispatch } from "react-redux";
 const UserManagement = () => {
+  const [todos, setTodos] = useState([]);
+  const [counter, setCounter] = useState(0);
 
+  const increaseCounter = () => {
+    setCounter(counter + 1);
+  };
 
+  const decreaseCounter = () => {
+    if (counter > 0) {
+      setCounter(counter - 1);
+    }
+  };
+  const navigate = useNavigate();
+  const isAuthenticated = !!localStorage.getItem("token");
+  console.log(isAuthenticated);
+  const dynamicUsers = JSON.parse(localStorage.getItem("users")) || [];
+  useEffect(() => {
+    if (!isAuthenticated) {
+      localStorage.getItem("/");
+      navigate("/");
+    }
+  }, [isAuthenticated]);
 
-  const navigate = useNavigate()
- const isAuthenticated =!! localStorage.getItem('token');
- console.log(isAuthenticated)
-  const dynamicUsers = JSON.parse(localStorage.getItem("users")) || []
-useEffect (()=>{
-  if(!isAuthenticated){
-    localStorage.getItem('/')
-    navigate('/')
-  }
-},[isAuthenticated])
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+  };
 
-const handleLogout= ()=>{
-  localStorage.removeItem('token');
-  navigate('/')
-}
+  const navItems = ["HOME", "USERS", "ALUMNI", "ABOUT"];
 
-const navItems=[
-  'HOME',
-  'USERS',
-  'ALUMNI',
-  'ABOUT',
-]
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await axios.get(
+        `https://jsonplaceholder.typicode.com/todos`
+      );
+      const data = await response.data;
+
+      setTodos(data);
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className="flex flex-col h-screen w-full  items-center">
-      <Header name="Mercy cherotich" navItems={navItems}/>
-
+      <Header
+        name="Mercy cherotich"
+        navItems={navItems}
+        increaseCounter={increaseCounter}
+        decreaseCounter={decreaseCounter}
+        counter={counter}
+      />
 
       <div>
-        <p className="text-3xl text-counter">00.00</p>
-
+        <p className="text-3xl text-counter">{counter}</p>
       </div>
-
-      
       <div className="w-full px-[2%]">
         <table className="w-[100%] mx-auto border border-neutral-300">
           <thead className="bg-black text-white">
@@ -73,7 +98,19 @@ const navItems=[
             ))}
           </tbody>
         </table>
-        <Link to="#" className="text-blue-500" onClick={handleLogout}>Logout?</Link>
+
+        <table>
+          <thead>
+            <tr>
+              <th>USER ID</th>
+              <th>ID</th>
+              <th>TITLE</th>
+            </tr>
+          </thead>
+        </table>
+        <Link to="#" className="text-blue-500" onClick={handleLogout}>
+          Logout?
+        </Link>
       </div>
     </div>
   );
